@@ -36,7 +36,9 @@
                 </td>
                 <td>
                     {% if not order.end_at %}
-                        <a href="{% url 'close_an_order' order.id %}" class="btn btn-sm btn-outline-danger">Close</a>
+                        <a href="{% url 'status_an_order' order.id %}" class="btn btn-sm btn-outline-danger">Close</a>
+                    {% else %}
+                        <a href="{% url 'status_an_order' order.id %}" class="btn btn-sm btn-success">Activate</a>
                     {% endif %}
                 </td>
             </tr>

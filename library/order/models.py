@@ -1,4 +1,5 @@
 from django.db import models, DataError
+from django.utils import timezone
 
 from authentication.models import CustomUser
 from book.models import Book
@@ -20,11 +21,12 @@ class Order(models.Model):
            param plated_end_at: Describes the planned return period of the book (2 weeks from the moment of creation).
            type plated_end_at: int (timestamp)
        """
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, default=None)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, default=None)
+    book = models.ForeignKey(Book, on_delete=models.PROTECT, default=None, related_name='book_orders')
+    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, default=None, related_name='user_orders')
     created_at = models.DateTimeField(auto_now_add=True)
     end_at = models.DateTimeField(default=None, null=True, blank=True)
     plated_end_at = models.DateTimeField(default=None)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         """
@@ -52,6 +54,25 @@ class Order(models.Model):
         :return: class, id
         """
         return f'{self.__class__.__name__}(id={self.id})'
+
+    def change_order_status(self):
+
+        if self.is_active:
+            self.is_active = False
+            self.end_at = timezone.now()
+
+            self.book.count += 1
+
+        else:
+            self.is_active = True
+            self.end_at = None
+
+            self.book.count -= 1
+
+        self.save(update_fields=['is_active', 'end_at'])
+        self.book.save(update_fields=['count'])
+
+        return self.is_active 
 
     def to_dict(self):
         """
