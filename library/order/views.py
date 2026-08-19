@@ -40,16 +40,18 @@ def create_an_order(request):
 
 @login_required
 @permission_required('is_staff', raise_exception=True)
-def close_an_order(request, order_id):
-    order = Order.get_by_id(order_id)
-    if order is None:
-        raise Http404("Not found")
+def status_an_order(request, order_id):
+
+    try:
+        order = Order.get_by_id(order_id)
+    except Order.DoesNotExist:
+        raise Http404("Order not found")
+    
     if request.method == 'POST':
-        order.update(end_at=timezone.now())
-        order.book.count += 1
-        order.book.save()
+        order.change_order_status()
         return redirect('list_of_orders')
-    return render(request, 'order/close_an_order.html', {'order': order})
+
+    return render(request, 'order/status_an_order.html', {'order': order})
 
 @login_required
 def user_orders(request, user_id):
