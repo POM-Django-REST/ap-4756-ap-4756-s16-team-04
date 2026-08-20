@@ -1,5 +1,7 @@
 import datetime
-
+from django.core.validators import validate_email
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
 
@@ -8,6 +10,8 @@ ROLE_CHOICES = (
     (1, 'librarian'),
 )
 
+MAX_NAME_CHARACTERS = 20
+MAX_EMAIL_CHARACTERS = 100
 
 class CustomUserManager(BaseUserManager):
     """
@@ -153,8 +157,33 @@ class CustomUser(AbstractBaseUser):
             return True
         return False
 
+
     @staticmethod
-    def create(email, password, first_name=None, middle_name=None, last_name=None):
+    def valid_bio_info(*args):
+        for arg in args:
+            if arg and len(arg) > MAX_NAME_CHARACTERS:
+                raise ValidationError
+        else:
+            return True
+
+
+    @staticmethod
+    def valid_email(email):
+        try:
+            validate_email(email)
+
+            if len(email) > MAX_EMAIL_CHARACTERS:
+                raise ValidationError
+        
+        except ValidationError:
+            raise
+
+        else:
+            return True
+
+
+    @classmethod
+    def create(cls, email, password, first_name=None, middle_name=None, last_name=None):
         """
         :param first_name: first name of a user
         :type first_name: str
@@ -168,13 +197,30 @@ class CustomUser(AbstractBaseUser):
         :type password: str
         :return: a new user object which is also written into the DB
         """
-        if len(first_name) <= 20 and len(middle_name) <= 20 and len(last_name) <= 20 and len(email) <= 100 and len(
-                email.split('@')) == 2 and len(CustomUser.objects.filter(email=email)) == 0:
-            custom_user = CustomUser(email=email, password=password, first_name=first_name, middle_name=middle_name,
-                                     last_name=last_name)
-            custom_user.save()
-            return custom_user
-        return None
+        try:
+            if cls.objects.filter(email=email).exists():
+                raise ValidationError
+
+            cls.valid_email(email)
+            cls.valid_bio_info(first_name, last_name, middle_name)
+            validate_password(password)
+            
+            new_user = cls.objects.create(
+                email = email,
+                first_name = first_name,
+                last_name = last_name,
+                middle_name = middle_name
+            )
+
+            new_user.set_password(password)
+            new_user.save()
+
+        except ValidationError:
+            return None
+
+        else:
+            return new_user
+
 
     def to_dict(self):
         """
