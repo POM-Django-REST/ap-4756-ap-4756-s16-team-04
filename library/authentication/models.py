@@ -44,6 +44,7 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
+
 class CustomUser(AbstractBaseUser):
     """
         This class represents a basic user. \n
@@ -88,6 +89,7 @@ class CustomUser(AbstractBaseUser):
     USERNAME_FIELD = 'email'
     objects = CustomUserManager()
 
+
     def __str__(self):
         """
         Magic method is redefined to show all information about CustomUser.
@@ -97,6 +99,7 @@ class CustomUser(AbstractBaseUser):
         """
         return f"'id': {self.id}, 'first_name': '{self.first_name}', 'middle_name': '{self.middle_name}', 'last_name': '{self.last_name}', 'email': '{self.email}', 'created_at': {int(self.created_at.timestamp())}, 'updated_at': {int(self.updated_at.timestamp())}, 'role': {self.role}, 'is_active': {self.is_active}"  # 'password': '{self.password}', \
 
+
     def __repr__(self):
         """
         This magic method is redefined to show class and id of CustomUser object.
@@ -104,19 +107,23 @@ class CustomUser(AbstractBaseUser):
         """
         return f"{CustomUser.__name__}(id={self.id}, role={self.get_role_name()})"
 
+
     @property
     def is_staff(self):
         return self.role == 1 or self.is_superuser
+
 
     def has_perm(self, perm, obj=None):
         if self.is_superuser:
             return True
         return self.role == 1 and self.is_active
 
+
     def has_perms(self, perm, obj=None):
         if self.is_superuser:
             return True
         return self.role == 1 and self.is_active
+
 
     def has_module_perms(self, app_label):
         if self.is_superuser:
@@ -133,6 +140,7 @@ class CustomUser(AbstractBaseUser):
         custom_user = CustomUser.objects.filter(id=user_id).first()
         return custom_user if custom_user else None
 
+
     @staticmethod
     def get_by_email(email):
         """
@@ -144,6 +152,7 @@ class CustomUser(AbstractBaseUser):
         custom_user = CustomUser.objects.filter(email=email).first()
         return custom_user if custom_user else None
 
+
     @staticmethod
     def delete_by_id(user_id):
         """
@@ -152,17 +161,21 @@ class CustomUser(AbstractBaseUser):
         :return: True if object existed in the db and was removed or False if it didn't exist
         """
         user_to_delete = CustomUser.objects.filter(id=user_id).first()
+
         if user_to_delete:
             CustomUser.objects.filter(id=user_id).delete()
             return True
+
         return False
 
 
     @staticmethod
     def valid_bio_info(*args):
         for arg in args:
+
             if arg and len(arg) > MAX_NAME_CHARACTERS:
                 raise ValidationError
+
         else:
             return True
 
@@ -249,6 +262,7 @@ class CustomUser(AbstractBaseUser):
                 'role': self.role,
                 'is_active': self.is_active}
 
+
     def update(self,
                first_name=None,
                last_name=None,
@@ -272,21 +286,36 @@ class CustomUser(AbstractBaseUser):
         :type is_active: bool
         :return: None
         """
-        user_to_update = CustomUser.objects.filter(email=self.email).first()
-        if first_name != None and len(first_name) <= 20:
-            user_to_update.first_name = first_name
-        if last_name != None and len(last_name) <= 20:
-            user_to_update.last_name = last_name
-        if middle_name != None and len(middle_name) <= 20:
-            user_to_update.middle_name = middle_name
-        if password is not None and password.strip():
-            user_to_update.set_password(password)
-        if role != None:
-            user_to_update.role = role
-        if is_active != None:
-            user_to_update.is_active = is_active
-        user_to_update.save()
-        return user_to_update
+        try:
+            self.valid_bio_info(first_name, last_name, middle_name)
+
+            if first_name:
+                self.first_name = first_name
+
+            if last_name:
+                self.last_name = last_name
+
+            if middle_name:
+                self.middle_name = middle_name
+
+            if password:
+                validate_password(password)
+                self.set_password(password)
+
+            if role:
+                self.role = role
+
+            if is_active:
+                self.is_active = is_active
+
+            self.save()
+        
+        except ValidationError:
+            raise
+
+        else:
+            return self
+
 
     @staticmethod
     def get_all():
@@ -294,6 +323,7 @@ class CustomUser(AbstractBaseUser):
         returns data for json request with QuerySet of all users
         """
         return CustomUser.objects.all()
+
 
     def get_role_name(self):
         """
