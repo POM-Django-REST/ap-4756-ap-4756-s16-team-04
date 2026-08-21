@@ -1,10 +1,11 @@
 import datetime
-from django.core.validators import validate_email
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
-from authentication.constants import ROLE_CHOICES, MAX_EMAIL_CHARACTERS, MAX_NAME_CHARACTERS
+from authentication.constants import ROLE_CHOICES
+from authentication.validators import valid_email, valid_bio_info
+
 
 
 class CustomUserManager(BaseUserManager):
@@ -143,8 +144,7 @@ class CustomUser(AbstractBaseUser):
         :param user_id: SERIAL: the id of a user to be found in the DB
         :return: user object or None if a user with such ID does not exist
         """
-        custom_user = CustomUser.objects.filter(id=user_id).first()
-        return custom_user if custom_user else None
+        return CustomUser.objects.filter(id=user_id).first()
 
 
     @staticmethod
@@ -155,8 +155,7 @@ class CustomUser(AbstractBaseUser):
         :type email: str
         :return: user object or None if a user with such ID does not exist
         """
-        custom_user = CustomUser.objects.filter(email=email).first()
-        return custom_user if custom_user else None
+        return CustomUser.objects.filter(email=email).first()
 
 
     @staticmethod
@@ -173,32 +172,6 @@ class CustomUser(AbstractBaseUser):
             return True
 
         return False
-
-
-    @staticmethod
-    def valid_bio_info(*args):
-        for arg in args:
-
-            if arg and len(arg) > MAX_NAME_CHARACTERS:
-                raise ValidationError
-
-        else:
-            return True
-
-
-    @staticmethod
-    def valid_email(email):
-        try:
-            validate_email(email)
-
-            if len(email) > MAX_EMAIL_CHARACTERS:
-                raise ValidationError
-        
-        except ValidationError:
-            raise
-
-        else:
-            return True
 
 
     @classmethod
@@ -220,8 +193,8 @@ class CustomUser(AbstractBaseUser):
             if cls.objects.filter(email=email).exists():
                 raise ValidationError
 
-            cls.valid_email(email)
-            cls.valid_bio_info(first_name, last_name, middle_name)
+            valid_email(email)
+            valid_bio_info(first_name, last_name, middle_name)
             validate_password(password)
             
             new_user = cls.objects.create(
@@ -294,7 +267,7 @@ class CustomUser(AbstractBaseUser):
         :return: None
         """
         try:
-            self.valid_bio_info(first_name, last_name, middle_name)
+            valid_bio_info(first_name, last_name, middle_name)
 
             if first_name:
                 self.first_name = first_name
