@@ -97,7 +97,19 @@ class CustomUser(AbstractBaseUser):
                  user email, user password, user updated_at, user created_at,
                  user role, user is_active
         """
-        return f"'id': {self.id}, 'first_name': '{self.first_name}', 'middle_name': '{self.middle_name}', 'last_name': '{self.last_name}', 'email': '{self.email}', 'created_at': {int(self.created_at.timestamp())}, 'updated_at': {int(self.updated_at.timestamp())}, 'role': {self.role}, 'is_active': {self.is_active}"  # 'password': '{self.password}', \
+        data = {
+            'id': self.id,
+            'first_name': self.first_name,
+            'middle_name': self.middle_name,
+            'last_name': self.last_name,
+            'email': self.email,
+            'created_at': int(self.created_at.timestamp()),
+            'updated_at': int(self.updated_at.timestamp()),
+            'role': self.role,
+            'is_active': self.is_active
+        }
+
+        return ", ".join(f"'{key}': '{value}'" if isinstance(value, str) else f"'{key}': {value}" for key, value in data.items())
 
 
     def __repr__(self):
@@ -105,7 +117,7 @@ class CustomUser(AbstractBaseUser):
         This magic method is redefined to show class and id of CustomUser object.
         :return: class, id
         """
-        return f"{CustomUser.__name__}(id={self.id}, role={self.get_role_name()})"
+        return f"{self.__class__.__name__}(id={self.id}, role={self.get_role_name()})"
 
 
     @property
@@ -253,14 +265,15 @@ class CustomUser(AbstractBaseUser):
         | }
         """
         return {'id': self.id,
-                'first_name': f'{self.first_name}',
-                'middle_name': f'{self.middle_name}',
-                'last_name': f'{self.last_name}',
-                'email': f'{self.email}',
+                'first_name': self.first_name,
+                'middle_name': self.middle_name,
+                'last_name': self.last_name,
+                'email': self.email,
                 'created_at': int(self.created_at.timestamp()),
                 'updated_at': int(self.updated_at.timestamp()),
                 'role': self.role,
-                'is_active': self.is_active}
+                'is_active': self.is_active
+                }
 
 
     def update(self,
