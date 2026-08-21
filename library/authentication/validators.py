@@ -1,4 +1,4 @@
-from xml.dom import ValidationError
+from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from authentication.constants import MAX_EMAIL_CHARACTERS, MAX_NAME_CHARACTERS
 

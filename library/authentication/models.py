@@ -208,7 +208,7 @@ class CustomUser(AbstractBaseUser):
             new_user.save()
 
         except ValidationError:
-            return None
+            raise
 
         else:
             return new_user

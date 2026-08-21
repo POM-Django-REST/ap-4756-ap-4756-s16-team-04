@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+from authentication.validators import valid_bio_info
 import book.models
 
 
@@ -81,10 +83,17 @@ class Author(models.Model):
         type patronymic: str max_length=20
         :return: a new author object which is also written into the DB
         """
-        if name and len(name) <= 20 and surname and len(surname) <= 20 and patronymic and len(patronymic) <= 20:
-            author = Author(name=name, surname=surname, patronymic=patronymic)
-            author.save()
-            return author
+        try:
+            valid_bio_info(name, surname, patronymic)
+
+            new_author = Author(name=name, surname=surname, patronymic=patronymic)
+            new_author.save()
+
+        except ValidationError:
+            raise
+
+        else:
+            return new_author
 
 
     def to_dict(self):
@@ -116,13 +125,25 @@ class Author(models.Model):
         :return: None
         """
 
-        if name and len(name) <= 20:
-            self.name = name
-        if surname and len(surname) <= 20:
-            self.surname = surname
-        if patronymic and len(patronymic) <= 20:
-            self.patronymic = patronymic
-        self.save()
+        try:
+            valid_bio_info(name, surname, patronymic)
+
+            if name:
+                self.name = name
+
+            if surname:
+                self.surname = surname
+
+            if patronymic:
+                self.patronymic = patronymic
+
+            self.save()
+
+        except ValidationError:
+            raise
+
+        else:
+            return self
 
 
     @staticmethod
