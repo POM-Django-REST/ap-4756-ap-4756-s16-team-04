@@ -4,14 +4,8 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
+from authentication.constants import ROLE_CHOICES, MAX_EMAIL_CHARACTERS, MAX_NAME_CHARACTERS
 
-ROLE_CHOICES = (
-    (0, 'visitor'),
-    (1, 'librarian'),
-)
-
-MAX_NAME_CHARACTERS = 20
-MAX_EMAIL_CHARACTERS = 100
 
 class CustomUserManager(BaseUserManager):
     """
