@@ -1,4 +1,7 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+from authentication.validators import valid_book_info
+
 
 
 class Book(models.Model):
@@ -20,19 +23,30 @@ class Book(models.Model):
     count = models.IntegerField(default=10)
     id = models.AutoField(primary_key=True)
 
+
     def __str__(self):
         """
         Magic method is redefined to show all information about Book.
         :return: book id, book name, book description, book count, book authors
         """
-        return f"'id': {self.id}, 'name': '{self.name}', 'description': '{self.description}', 'count': {self.count}, 'authors': {[author.id for author in self.authors.all()]}"
+        data = {
+            "id": self.id,
+            "name":self.name,
+            "description":self.description,
+            "count":self.count,
+            "authors":[author.id for author in self.authors.all()]
+        }
+
+        return ", ".join(f"'{key}': '{value}'" if isinstance(value, str) else f"'{key}': {value}" for key, value in data.items())
+
 
     def __repr__(self):
         """
         This magic method is redefined to show class and id of Book object.
         :return: class, id
         """
-        return f"Book(id={self.id})"
+        return f"return {self.__class__.__name__} (id={self.id})"
+
 
     @staticmethod
     def get_by_id(book_id):
@@ -40,7 +54,8 @@ class Book(models.Model):
         :param book_id: SERIAL: the id of a Book to be found in the DB
         :return: book object or None if a book with such ID does not exist
         """
-        return Book.objects.get(id=book_id) if Book.objects.filter(id=book_id) else None
+        return Book.objects.filter(id=book_id).first()
+
 
     @staticmethod
     def delete_by_id(book_id):
@@ -49,10 +64,14 @@ class Book(models.Model):
         :type book_id: int
         :return: True if object existed in the db and was removed or False if it didn't exist
         """
-        if Book.get_by_id(book_id) is None:
+        book = Book.get_by_id(book_id)
+
+        if not book:
             return False
-        Book.objects.get(id=book_id).delete()
+
+        book.delete()
         return True
+
 
     @staticmethod
     def create(name, description, count=10, authors=None):
@@ -67,18 +86,21 @@ class Book(models.Model):
         type authors: list->Author
         :return: a new book object which is also written into the DB
         """
-        if len(name) > 128:
-            return None
+        try:
+            valid_book_info(name, description, count)
 
-        book = Book()
-        book.name = name
-        book.description = description
-        book.count = count
-        if (authors is not None):
-            for elem in authors:
-                book.authors.add(elem)
-        book.save()
-        return book
+            new_book = Book(name = name, description = description, count = count)
+            new_book.save()
+
+            if authors:
+                new_book.add_authors(authors)
+
+        except ValidationError:
+            raise
+
+        else:
+            return new_book
+
 
     def to_dict(self):
         """
@@ -92,8 +114,16 @@ class Book(models.Model):
         |   'authors': []
         | }
         """
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'count': self.count,
+            'authors': [author.id for author in self.authors.all()]
+            }
+    
 
-    def update(self, name=None, description=None, count=None):
+    def update(self, name=None, description=None, count=None, authors=None):
         """
         Updates book in the database with the specified parameters.\n
         param name: Describes name of the book
@@ -104,16 +134,31 @@ class Book(models.Model):
         type count: int default=10
         :return: None
         """
-        if name is not None:
-            self.name = name
+        try:
 
-        if description is not None:
-            self.description = description
+            valid_book_info(name, description, count)
 
-        if count is not None:
-            self.count = count
+            if name:
+                self.name = name
 
-        self.save()
+            if description:
+                self.description = description
+
+            if count:
+                self.count = count
+
+            self.save()
+
+            if authors:
+                self.authors.set(authors)
+
+        except ValidationError:
+            raise
+
+        else:
+            return self
+
+
 
     def add_authors(self, authors):
         """
@@ -121,23 +166,13 @@ class Book(models.Model):
         param authors: list authors
         :return: None
         """
-        if (authors is not None):
-            for elem in authors:
-                self.authors.add(elem)
-                self.save()
+        if authors:
+            self.authors.add(*authors)
 
-    def remove_authors(self, authors):
-        """
-        Remove authors to  book in the database with the specified parameters.\n
-        param authors: list authors
-        :return: None
-        """
-        for elem in self.authors.values():
-            self.authors.remove(elem['id'])
 
     @staticmethod
     def get_all():
         """
         returns data for json request with QuerySet of all books
         """
-        return list(Book.objects.all())
+        return Book.objects.all()

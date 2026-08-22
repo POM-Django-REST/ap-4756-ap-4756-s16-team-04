@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from authentication.constants import MAX_EMAIL_CHARACTERS, MAX_NAME_CHARACTERS
+from authentication.constants import MAX_EMAIL_CHARACTERS, MAX_NAME_CHARACTERS, MAX_BOOK_NAME, MAX_BOOK_DESCRIPTION
 
 
 def valid_bio_info(*args):
@@ -25,3 +25,17 @@ def valid_email(email):
 
     else:
         return True
+
+
+def valid_book_info(book_name=None, book_description=None, count=10):
+    if book_name and len(book_name) > MAX_BOOK_NAME:
+        raise ValidationError
+
+    if book_description and len(book_description) > MAX_BOOK_DESCRIPTION:
+        raise ValidationError
+
+    if count < 0:
+        raise ValidationError
+
+    return True
+
