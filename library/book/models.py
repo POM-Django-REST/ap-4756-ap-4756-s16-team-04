@@ -159,6 +159,10 @@ class Book(models.Model):
             return self
 
 
+    def has_available_copies(self):
+        active_orders = self.book_orders.filter(end_at__isnull=True).count()
+        return active_orders < self.count
+
 
     def add_authors(self, authors):
         """
