@@ -1,8 +1,9 @@
-from django.db import models, DataError
+from django.core.exceptions import ValidationError
+from django.db import models
 from django.utils import timezone
-
 from authentication.models import CustomUser
 from book.models import Book
+
 
 
 class Order(models.Model):
@@ -29,25 +30,25 @@ class Order(models.Model):
     plated_end_at = models.DateTimeField(default=None)
     is_active = models.BooleanField(default=True)
 
+
     def __str__(self):
         """
         Magic method is redefined to show all information about Book.
         :return: book id, book name, book description, book count, book authors
         """
-        if self.end_at == None:
-            return f"\'id\': {self.pk}, " \
-                   f"\'user\': CustomUser(id={self.user.pk})," \
-                   f" \'book\': Book(id={self.book.pk})," \
-                   f" \'created_at\': \'{self.created_at}\'," \
-                   f" \'end_at\': {self.end_at}," \
-                   f" \'plated_end_at\': \'{self.plated_end_at}\'"
-        else:
-            return f"\'id\': {self.pk}, " \
-                   f"\'user\': CustomUser(id={self.user.pk})," \
-                   f" \'book\': Book(id={self.book.pk})," \
-                   f" \'created_at\': \'{self.created_at}\'," \
-                   f" \'end_at\': \'{self.end_at}\'," \
-                   f" \'plated_end_at\': \'{self.plated_end_at}\'"
+        data = {
+            "id":self.id,
+            "user":self.user,
+            "book":self.book,
+            "created_at": str(self.created_at) if self.created_at else None,
+            "end_at":str(self.end_at) if self.end_at else None,
+            "plated_end_at":str(self.plated_end_at) if self.plated_end_at else None
+        }
+
+        return ", ".join(f"'{key}': {repr(value)}" if key in ("user", "book") else \
+                        f"'{key}': '{value}'" if isinstance(value,str) else \
+                        f"'{key}': {value}" for key, value in data.items())
+
 
     def __repr__(self):
         """
@@ -55,6 +56,7 @@ class Order(models.Model):
         :return: class, id
         """
         return f'{self.__class__.__name__}(id={self.id})'
+
 
     def change_order_status(self):
 
@@ -75,6 +77,7 @@ class Order(models.Model):
 
         return self.is_active 
 
+
     def to_dict(self):
         """
                 :return: order id, book id, user id, order created_at, order end_at, order plated_end_at
@@ -88,54 +91,78 @@ class Order(models.Model):
                 |   'plated_end_at': 1509402866,
                 | }
                 """
-        pass
+        return {
+            'id': self.id,
+            'book': self.book,
+            'user': self.user,
+            'created_at': str(self.created_at),
+            'end_at': str(self.end_at) if self.end_at else None,
+            'plated_end_at': str(self.plated_end_at)
+        }
+
 
     @staticmethod
     def create(user, book, plated_end_at):
-        orders = Order.objects.all()
-        books = set()
-        for order in orders:
-            if not order.end_at:
-                books.add(order.book.id)
-        if book.id in books and book.count == 1:
-            return None
         try:
-            order = Order(user=user, book=book, plated_end_at=plated_end_at)
-            order.save()
-            return order
-        except ValueError:
+
+            if not book.has_available_copies():
+                raise ValidationError
+
+            new_order = Order(user=user, book=book, plated_end_at=plated_end_at)
+            new_order.save()
+
+            book.count -= 1
+            book.save()
+
+        except ValidationError:
             return None
-        except DataError:
+
+        except Exception:
             return None
+
+        else:
+            return new_order
+
 
     @staticmethod
     def get_by_id(order_id):
-        try:
-            return Order.objects.get(pk=order_id)
-        except:
-            return None
+        return Order.objects.filter(pk=order_id).first()
+
 
     def update(self, plated_end_at=None, end_at=None):
-        if plated_end_at != None:
-            self.plated_end_at = plated_end_at
-        if end_at != None:
-            self.end_at = end_at
-        self.save()
+        try:
+
+            if plated_end_at:
+                self.plated_end_at = plated_end_at
+
+            if end_at:
+                self.end_at = end_at
+
+            self.save()
+
+        except ValidationError:
+            return None
+
+        else:
+            return self
+
 
     @staticmethod
     def get_all():
-        return list(Order.objects.all())
+        return Order.objects.all()
+
 
     @staticmethod
     def get_not_returned_books():
         return Order.objects.filter(end_at=None).values()
 
+
     @staticmethod
     def delete_by_id(order_id):
-        try:
-            a = Order.objects.get(pk=order_id)
-        except:
+        order = Order.get_by_id(order_id)
+
+        if not order:
             return False
-        else:
-            a.delete()
-            return True
+
+        order.delete()
+        return True

@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, permission_required
 
@@ -99,7 +99,7 @@ def update_profile(request, user_id):
 
     try:
         if user != request.user:
-            raise Exception
+            raise PermissionDenied()
 
         if request.method == 'POST':
 
@@ -108,25 +108,13 @@ def update_profile(request, user_id):
             user.last_name = request.POST.get('last_name', '').strip()
             password = request.POST.get('password', '').strip()
 
-            if not user.first_name:
-                messages.error(request, "The first_name is must be required")
-            elif len(user.first_name) > 20:
-                messages.error(request, "The first_name of a user must contain fewer than 20 characters.")
-
-            if not user.middle_name:
-                messages.error(request, "The middle_name is must be required")
-            elif len(user.middle_name) > 20:
-                messages.error(request, "The middle_name of a user must contain fewer than 20 characters.")
-
-            if not user.last_name:
-                messages.error(request, "The last_name is must be required")
-            elif len(user.last_name) > 20:
-                messages.error(request, "The last_name of a user must contain fewer than 20 characters.")
-
             if not password or not password.strip():
                 password = None
 
-            updated_user = user.update(first_name=user.first_name, middle_name=user.middle_name, last_name=user.last_name, password=password)
+            updated_user = user.update(first_name=user.first_name, 
+                                       middle_name=user.middle_name, 
+                                       last_name=user.last_name, 
+                                       password=password)
 
             if password and updated_user:
                 user.refresh_from_db()
@@ -135,8 +123,9 @@ def update_profile(request, user_id):
             context = {'user':user}
             return render(request,'authentication/update_profile.html', context=context)
 
-    except Exception:
-        messages.error(request, "Sorry, something went wrong.")
+    except ValidationError:
+        messages.error(request, "Incorrect data to change")
+
     else:
         messages.success(request, "The user successfully updated!")
         return redirect('authentication:profile')
