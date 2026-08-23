@@ -1,7 +1,7 @@
 from django import forms
 from authentication.constants import MAX_PASSWORD_CHARACTERS, MIN_PASSWORD_CHARACTERS, ROLE_CHOICES, MAX_EMAIL_CHARACTERS, MAX_NAME_CHARACTERS
 from django.core.validators import MinLengthValidator
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 
 
 CustomUser = get_user_model()
@@ -38,6 +38,15 @@ class RegistrationForm(forms.ModelForm):
         fields = ('email', 'first_name', 'last_name', 'middle_name', 'role')
 
 
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip()
+
+        if CustomUser.objects.filter(email=email).exists():
+            raise forms.ValidationError('The email is already used.')
+        
+        return email
+
+
     def clean_password2(self):
         password1 = self.cleaned_data.get('password1')
         password2 = self.cleaned_data.get('password2')
@@ -60,3 +69,36 @@ class RegistrationForm(forms.ModelForm):
             user.save()
 
         return user
+
+
+class LoginForm(forms.Form):
+    email = forms.EmailField(required=True, label='Email address', help_text='Input your Email address',
+                             widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Write your email address here'}))
+    password = forms.CharField(required=True, label='Password', help_text='Input your password',
+                               widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Write password here'}))
+
+
+    def __init__(self, request=None, *args, **kwargs):
+        self.request = request
+        self.user = None
+        super().__init__(*args, **kwargs)
+
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        email = cleaned_data.get('email', '').strip()
+        password = cleaned_data.get('password', '')
+
+        if email and password:
+            user = CustomUser.objects.filter(email=email).first()
+
+            if user and not user.is_active:
+                raise forms.ValidationError('Your account is blocked.')
+
+            self.user = authenticate(self.request, email=email, password=password)
+
+            if self.user is None:
+                raise forms.ValidationError('Enter a correct email and password.')
+
+        return cleaned_data

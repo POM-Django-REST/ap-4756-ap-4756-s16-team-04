@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required, permission_required
 
 from authentication.models import CustomUser
-from authentication.forms import RegistrationForm
+from authentication.forms import LoginForm, RegistrationForm
 
 
 def index_view(request):
@@ -76,22 +76,37 @@ def login_view(request):
         messages.info(request, "You are already logged")
         return redirect('authentication:profile')
 
+    # if request.method == 'POST':
+    #     email = request.POST.get('email', '').strip()
+    #     password = request.POST.get('password', '')
+
+    #     user = authenticate(request, email=email, password=password)
+
+    #     if user is not None:
+
+    #         login(request, user)
+
+    #         messages.success(request, f'Congratulation, {user.email}!')
+    #         return redirect('authentication:index_auth')
+    #     else:
+    #         messages.error(request, 'Invalid email or password.')
+
+    # return render(request, 'authentication/login.html')
+
     if request.method == 'POST':
-        email = request.POST.get('email', '').strip()
-        password = request.POST.get('password', '')
-
-        user = authenticate(request, email=email, password=password)
-
-        if user is not None:
+        form = LoginForm(request, data=request.POST)
+        
+        if form.is_valid():
+            user = form.user
 
             login(request, user)
 
             messages.success(request, f'Congratulation, {user.email}!')
             return redirect('authentication:index_auth')
-        else:
-            messages.error(request, 'Invalid email or password.')
+    else:
+        form = LoginForm(request)
 
-    return render(request, 'authentication/login.html')
+    return render(request, 'authentication/login.html', {'form': form})
 
 
 @login_required
