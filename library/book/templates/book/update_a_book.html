@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% block title %}Add book{% endblock %}
+{% block title %}Update a book{% endblock %}
 {% block content %}
 
 <div class="container">
-    <form class="card" id="createABookForm" method="POST" action="{% url 'book:create_a_book' %}">
+    <form class="card" id="updateABookForm" method="POST" action="{% url 'book:update_a_book' book.id %}">
         <div class="d-flex justify-content-center">
-            <h3>Create a Book</h3>
+            <h3>Update a Book</h3>
         </div>
         <div class="form-group m-5 mt-2 mb-2">
             {% csrf_token %}
@@ -37,37 +37,7 @@
                 </div>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary btn-block">Create a Book</button>
+        <button type="submit" class="btn btn-primary btn-block">Update a Book</button>
     </form>
 </div>
-
-<!-- <div class="my-4">
-    <h1>Add a New Book</h1>
-
-    <form method="post" action="{% url 'book:create_a_book' %}" class="col-md-6">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input type="text" name="name" class="form-control" maxlength="128" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Description</label>
-            <input type="text" name="description" class="form-control" maxlength="256">
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Count</label>
-            <input type="number" name="count" class="form-control" value="10" min="0">
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Authors</label>
-            <select name="authors" class="form-select" multiple>
-                {% for author in authors %}
-                    <option value="{{ author.id }}">{{ author.surname }} {{ author.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Create</button>
-        <a href="{% url 'book:list_of_books' %}" class="btn btn-outline-secondary">Cancel</a>
-    </form>
-</div> -->
 {% endblock %}
