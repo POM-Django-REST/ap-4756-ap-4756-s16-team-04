@@ -102,3 +102,19 @@ class LoginForm(forms.Form):
                 raise forms.ValidationError('Enter a correct email and password.')
 
         return cleaned_data
+
+
+
+class UpdateCustomUserForm(forms.ModelForm):
+    first_name = forms.CharField(max_length=MAX_NAME_CHARACTERS, label="First Name", help_text='John',
+                                 widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Write your first name here'}))
+    last_name = forms.CharField(max_length=MAX_NAME_CHARACTERS, label="Last Name", help_text='Smit',
+                                widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Write your last name here'}))
+    middle_name = forms.CharField(max_length=MAX_NAME_CHARACTERS, label="Middle Name", help_text='Doe',
+                                widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Write your middle name here'}))
+
+
+
+    class Meta:
+        model = CustomUser
+        fields = ('first_name', 'last_name', 'middle_name')

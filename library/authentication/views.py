@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.decorators import login_required, permission_required
 
 from authentication.models import CustomUser
-from authentication.forms import LoginForm, RegistrationForm
+from authentication.forms import LoginForm, RegistrationForm, UpdateCustomUserForm
 
 
 def index_view(request):
@@ -129,40 +129,54 @@ def update_profile(request, user_id):
 
     user = get_object_or_404(CustomUser, pk=user_id)
 
-    try:
-        if user != request.user:
-            raise PermissionDenied()
+    if user != request.user:
+        raise PermissionDenied()
+    
+    # try:
+    #     if request.method == 'POST':
 
-        if request.method == 'POST':
+    #         user.first_name = request.POST.get('first_name', '').strip()
+    #         user.middle_name = request.POST.get('middle_name', '').strip()
+    #         user.last_name = request.POST.get('last_name', '').strip()
+    #         password = request.POST.get('password', '').strip()
 
-            user.first_name = request.POST.get('first_name', '').strip()
-            user.middle_name = request.POST.get('middle_name', '').strip()
-            user.last_name = request.POST.get('last_name', '').strip()
-            password = request.POST.get('password', '').strip()
+    #         if not password or not password.strip():
+    #             password = None
 
-            if not password or not password.strip():
-                password = None
+    #         updated_user = user.update(first_name=user.first_name, 
+    #                                    middle_name=user.middle_name, 
+    #                                    last_name=user.last_name, 
+    #                                    password=password)
 
-            updated_user = user.update(first_name=user.first_name, 
-                                       middle_name=user.middle_name, 
-                                       last_name=user.last_name, 
-                                       password=password)
+    #         if password and updated_user:
+    #             user.refresh_from_db()
+    #             update_session_auth_hash(request, updated_user)
+    #     else:
+    #         context = {'user':user}
+    #         return render(request,'authentication/update_profile.html', context=context)
 
-            if password and updated_user:
-                user.refresh_from_db()
-                update_session_auth_hash(request, updated_user)
-        else:
-            context = {'user':user}
-            return render(request,'authentication/update_profile.html', context=context)
+    # except ValidationError:
+    #     messages.error(request, "Incorrect data to change")
 
-    except ValidationError:
-        messages.error(request, "Incorrect data to change")
+    # else:
+    #     messages.success(request, "The user successfully updated!")
+    #     return redirect('authentication:profile')
 
+    # context = {'user':user}
+
+    # return render(request,'authentication/update_profile.html', context=context)
+
+    if request.method == 'POST':
+        form = UpdateCustomUserForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, "The user successfully updated!")
+            return redirect('authentication:profile')
     else:
-        messages.success(request, "The user successfully updated!")
-        return redirect('authentication:profile')
+        form = UpdateCustomUserForm(instance=user)
 
-    context = {'user':user}
+    context = {'user': user, 'form': form}
 
     return render(request,'authentication/update_profile.html', context=context)
 
