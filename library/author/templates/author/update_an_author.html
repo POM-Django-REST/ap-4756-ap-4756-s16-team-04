@@ -2,7 +2,22 @@
 {% block title %}Update an Author{% endblock %}
 {% block content %}
 
-<div class="my-4">
+ <div class="container">
+        {% if user.is_staff %}
+        <form class="card" method="POST" action="{% url 'author:update_an_author' author.id %}">
+        <div class="d-flex justify-content-center">
+            <h3>Update An Author</h3>
+        </div>
+        <div class="form-group m-5 mt-2 mb-2">
+            {% csrf_token %}
+            {{ form.as_p }}
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Update an Author</button>
+    </form>
+    {% endif %}
+</div>
+
+<!-- <div class="my-4">
     <h1>Update an Author</h1>
     <form method="POST" action="{% url 'author:update_an_author' author.id %}" class="col-md-6">
         {% csrf_token %}
@@ -21,5 +36,5 @@
         <button type="submit" class="btn btn-primary">Update</button>
         <a href="{% url 'author:list_of_authors' %}" class="btn btn-outline-secondary">Cancel</a>
     </form>
-</div>
+</div> -->
 {% endblock %}
