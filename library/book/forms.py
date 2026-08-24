@@ -24,6 +24,12 @@ class CreateABookForm(forms.ModelForm):
         fields = ['name', 'description', 'count', 'authors']
 
 
+    def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+    
+            self.fields['authors'].label_from_instance = lambda obj: f'{obj.name} {obj.surname} {obj.patronymic}'
+
+
     def save(self, commit=True):
         book = super().save(commit=commit)
 
