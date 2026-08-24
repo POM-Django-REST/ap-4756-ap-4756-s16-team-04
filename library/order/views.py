@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
+from order.forms import CreateAnOrderForm
 from order.models import Order
 from book.models import Book
 from django.contrib.auth.decorators import login_required, permission_required
@@ -14,24 +15,39 @@ def create_an_order(request):
         messages.error(request, "Librarians can't create orders")
         return render(request, '403.html', status=403)
     
+    # if request.method == 'POST':
+    #     book_id = request.POST.get('book')
+
+    #     book = get_object_or_404(Book, id=book_id)
+
+    #     plated_end_at = timezone.now() + LOAN_PERIOD
+
+    #     order = Order.create(user=request.user, book=book, plated_end_at=plated_end_at)
+
+    #     if order is None:
+    #         books = Book.objects.all()
+
+    #         return render(request, 'order/create_an_order.html', {'error': 'No copies available.', 'books': books})
+
+    #     return redirect('user_orders', user_id=request.user.id)
+
+    # books = Book.objects.all()
+    # return render(request, 'order/create_an_order.html', {'books': books})
+
     if request.method == 'POST':
-        book_id = request.POST.get('book')
+        form = CreateAnOrderForm(request.POST, request=request)
+    
+        if form.is_valid():
+            form.save()
 
-        book = get_object_or_404(Book, id=book_id)
-
-        plated_end_at = timezone.now() + LOAN_PERIOD
-
-        order = Order.create(user=request.user, book=book, plated_end_at=plated_end_at)
-
-        if order is None:
-            books = Book.objects.all()
-
-            return render(request, 'order/create_an_order.html', {'error': 'No copies available.', 'books': books})
-
-        return redirect('user_orders', user_id=request.user.id)
-
-    books = Book.objects.all()
-    return render(request, 'order/create_an_order.html', {'books': books})
+            messages.success(request, "The new order successfully created!")
+            return redirect('user_orders', user_id=request.user.id)
+    else:
+        form = CreateAnOrderForm(request=request)
+    
+    context = {'form': form}
+    
+    return render(request, 'order/create_an_order.html', context=context)
 
 
 @login_required

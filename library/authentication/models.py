@@ -1,9 +1,10 @@
 import datetime
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.validators import MinLengthValidator
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
-from authentication.constants import ROLE_CHOICES
+from authentication.constants import ROLE_CHOICES, MAX_EMAIL_CHARACTERS, MAX_NAME_CHARACTERS, MAX_PASSWORD_CHARACTERS, MIN_PASSWORD_CHARACTERS
 from authentication.validators import valid_email, valid_bio_info
 
 
@@ -64,15 +65,16 @@ class CustomUser(AbstractBaseUser):
         param is_active: user role, default value False
         type updated_at: bool
     """
-    first_name = models.CharField(max_length=20, null=True, blank=True, default=None)
-    last_name = models.CharField(max_length=20, null=True, blank=True,default=None)
-    middle_name = models.CharField(max_length=20, null=True, blank=True, default=None)
+    first_name = models.CharField(max_length=MAX_NAME_CHARACTERS, null=True, blank=True, default=None)
+    last_name = models.CharField(max_length=MAX_NAME_CHARACTERS, null=True, blank=True,default=None)
+    middle_name = models.CharField(max_length=MAX_NAME_CHARACTERS, null=True, blank=True, default=None)
 
-    email = models.CharField(max_length=100, unique=True, default=None)
-    password = models.CharField(default=None, max_length=255)
+    email = models.EmailField(max_length=MAX_EMAIL_CHARACTERS, unique=True, default=None)
+    password = models.CharField(default=None, max_length=MAX_PASSWORD_CHARACTERS, 
+                                validators=[MinLengthValidator(MIN_PASSWORD_CHARACTERS)])
 
-    created_at = models.DateTimeField(editable=False, auto_now=datetime.datetime.now())
-    updated_at = models.DateTimeField(auto_now=datetime.datetime.now())
+    created_at = models.DateTimeField(editable=False, auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     role = models.IntegerField(choices=ROLE_CHOICES, default=0)
 

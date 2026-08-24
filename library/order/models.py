@@ -3,6 +3,7 @@ from django.db import models
 from django.utils import timezone
 from authentication.models import CustomUser
 from book.models import Book
+from authentication.constants import MIN_AMOUNT_OF_BOOK
 
 
 
@@ -24,6 +25,7 @@ class Order(models.Model):
        """
     id = models.AutoField(primary_key=True)
     book = models.ForeignKey(Book, on_delete=models.PROTECT, default=None, related_name='book_orders')
+    copies = models.PositiveIntegerField(default=MIN_AMOUNT_OF_BOOK)
     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, default=None, related_name='user_orders')
     created_at = models.DateTimeField(auto_now_add=True)
     end_at = models.DateTimeField(default=None, null=True, blank=True)

@@ -12,6 +12,7 @@
         <thead>
             <tr>
                 <th>Book</th>
+                <th>Copies</th>
                 <th>Borrowed</th>
                 <th>Planned return</th>
                 <th>Returned</th>
@@ -21,7 +22,8 @@
         <tbody>
             {% for order in orders %}
             <tr>
-                <td><a href="{% url 'book_detail' order.book.id %}">{{ order.book.name }}</a></td>
+                <td><a href="{% url 'book:book_detail' order.book.id %}">{{ order.book.name }}</a></td>
+                <td>{{ order.copies }}</td>
                 <td>{{ order.created_at|date:"Y-m-d" }}</td>
                 <td>{{ order.plated_end_at|date:"Y-m-d" }}</td>
                 <td>{{ order.end_at|date:"Y-m-d"|default:"-" }}</td>

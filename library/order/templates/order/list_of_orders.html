@@ -4,13 +4,13 @@
 <div class="my-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>All Orders</h1>
-        <a href="{% url 'create_an_order' %}" class="btn btn-primary">+ New order</a>
     </div>
 
     <table class="table table-striped align-middle">
         <thead>
             <tr>
                 <th>Book</th>
+                <th>Copies</th>
                 <th>User</th>
                 <th>Borrowed</th>
                 <th>Planned return</th>
@@ -22,7 +22,8 @@
         <tbody>
             {% for order in orders %}
             <tr>
-                <td><a href="{% url 'book_detail' order.book.id %}">{{ order.book.name }}</a></td>
+                <td><a href="{% url 'book:book_detail' order.book.id %}">{{ order.book.name }}</a></td>
+                <td>{{ order.copies }}</td>
                 <td>{{ order.user.email }}</td>
                 <td>{{ order.created_at|date:"Y-m-d" }}</td>
                 <td>{{ order.plated_end_at|date:"Y-m-d" }}</td>

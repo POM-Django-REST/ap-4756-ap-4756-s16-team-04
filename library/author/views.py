@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from author.models import Author
+from author.forms import CreateAnAuthorForm, UpdateAnAuthorForm
 
 app_name = 'author'
 
@@ -23,22 +24,38 @@ def list_of_authors(request):
 @login_required
 @permission_required('is_staff', raise_exception=True)
 def create_an_author(request): 
-    if request.method == 'POST':
-        name = request.POST.get('name','').strip()
-        surname = request.POST.get('surname', '').strip()
-        patronymic = request.POST.get('patronymic', '').strip()
+    # if request.method == 'POST':
+    #     name = request.POST.get('name','').strip()
+    #     surname = request.POST.get('surname', '').strip()
+    #     patronymic = request.POST.get('patronymic', '').strip()
 
-        try:
-            author = Author.create(name=name, surname=surname, patronymic=patronymic)
+    #     try:
+    #         author = Author.create(name=name, surname=surname, patronymic=patronymic)
         
-        except ValidationError:
-            messages.error(request, "Incorrect data.")
+    #     except ValidationError:
+    #         messages.error(request, "Incorrect data.")
 
-        else:
+    #     else:
+    #         messages.success(request, "The new author successfully created!")
+    #         return redirect('author:author_detail', author_id=author.id)
+
+    # return render(request, 'author/create_an_author.html')
+
+    if request.method == 'POST':
+        form = CreateAnAuthorForm(request.POST)
+
+        if form.is_valid():
+            new_author = form.save()
+
             messages.success(request, "The new author successfully created!")
-            return redirect('author:author_detail', author_id=author.id)
+            return redirect('author:author_detail', author_id=new_author.id)
+    else:
+        form = CreateAnAuthorForm()
 
-    return render(request, 'author/create_an_author.html')
+    context = {'form': form}
+
+    return render(request, 'author/create_an_author.html', context=context)
+
 
 
 @login_required
@@ -73,26 +90,40 @@ def update_an_author(request, author_id):
 
     author = get_object_or_404(Author, pk=author_id)
 
-    try:
-        if request.method == 'POST':
+    # try:
+    #     if request.method == 'POST':
 
-            author.name = request.POST.get('name', '').strip()
-            author.surname = request.POST.get('surname', '').strip()
-            author.patronymic = request.POST.get('patronymic', '').strip()
+    #         author.name = request.POST.get('name', '').strip()
+    #         author.surname = request.POST.get('surname', '').strip()
+    #         author.patronymic = request.POST.get('patronymic', '').strip()
 
-            author.update(name=author.name, surname=author.surname, patronymic=author.patronymic)
+    #         author.update(name=author.name, surname=author.surname, patronymic=author.patronymic)
 
-        else:
-            context = {'author':author}
-            return render(request,'author/update_an_author.html', context=context)
+    #     else:
+    #         context = {'author':author}
+    #         return render(request,'author/update_an_author.html', context=context)
 
-    except ValidationError:
-        messages.error(request, "Incorrect data to change.")
+    # except ValidationError:
+    #     messages.error(request, "Incorrect data to change.")
 
+    # else:
+    #     messages.success(request, "The author successfully updated!")
+    #     return redirect('author:author_detail', author_id=author.id)
+
+    # context = {'author':author}
+
+    # return render(request,'author/update_an_author.html', context=context)
+
+    if request.method == 'POST':
+        form = UpdateAnAuthorForm(request.POST, instance=author)
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, "The author successfully updated!")
+            return redirect('author:author_detail', author_id=author.id)
     else:
-        messages.success(request, "The author successfully updated!")
-        return redirect('author:author_detail', author_id=author.id)
+        form = UpdateAnAuthorForm(instance=author)
 
-    context = {'author':author}
+    context = {'author':author, 'form': form}
 
     return render(request,'author/update_an_author.html', context=context)

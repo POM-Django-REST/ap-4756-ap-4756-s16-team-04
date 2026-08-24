@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from authentication.constants import MAX_BOOK_NAME, MAX_BOOK_DESCRIPTION, DEFAULT_NUMBER_OF_BOOKS
 from authentication.validators import valid_book_info
 
 
@@ -18,9 +19,9 @@ class Book(models.Model):
         param authors: list of Authors
         type authors: list->Author
     """
-    name = models.CharField(blank=True, max_length=128)
-    description = models.CharField(blank=True, max_length=256)
-    count = models.IntegerField(default=10)
+    name = models.CharField(blank=True, max_length=MAX_BOOK_NAME)
+    description = models.CharField(blank=True, max_length=MAX_BOOK_DESCRIPTION)
+    count = models.IntegerField(default=DEFAULT_NUMBER_OF_BOOKS)
     id = models.AutoField(primary_key=True)
 
 

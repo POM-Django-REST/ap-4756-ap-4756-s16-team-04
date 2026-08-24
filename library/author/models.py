@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from authentication.validators import valid_bio_info
+from authentication.constants import MAX_NAME_CHARACTERS
 import book.models
 
 
@@ -17,9 +18,9 @@ class Author(models.Model):
         param patronymic: Describes middle name of the author
         type patronymic: str max_length=20
     """
-    name = models.CharField(blank=True, max_length=20)
-    surname = models.CharField(blank=True, max_length=20)
-    patronymic = models.CharField(blank=True, max_length=20)
+    name = models.CharField(blank=True, max_length=MAX_NAME_CHARACTERS)
+    surname = models.CharField(blank=True, max_length=MAX_NAME_CHARACTERS)
+    patronymic = models.CharField(blank=True, max_length=MAX_NAME_CHARACTERS)
     books = models.ManyToManyField(book.models.Book, blank=True, related_name='authors')
     id = models.AutoField(primary_key=True)
 
