@@ -21,7 +21,6 @@ class BookAdmin(admin.ModelAdmin):
     search_fields = ['name', 'authors__name']
     list_filter = ['id', 'name', 'authors']
 
-    filter_horizontal = ['authors']
     
     fieldsets = [
         ('About Book', {

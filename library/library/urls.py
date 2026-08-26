@@ -22,6 +22,11 @@ urlpatterns = [
     path('orders/', include('order.urls')),
     path('authors/', include('author.urls')),
     path('', include('authentication.urls'))
+
+    # path('api/v1/user/', include(user_router.api.urls)),
+    # path('api/v1/author/', include(author_router.api.urls)),
+    # path('api/v1/book'/, include(book_router.api.urls)),
+    # path('api/v1/order/', include(order_router.api.urls)),
 ]
 
 handler400 = 'authentication.views.bad_request'
