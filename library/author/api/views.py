@@ -8,19 +8,20 @@ from .serializers import AuthorSerializer
 
 
 class AuthorListApiView(APIView):
-    def get(self, request):
-        try:
-            id = request.query_params['id']
-            author = Author.objects.get(pk=id)
-            serializer = AuthorSerializer(author)
+    def get(self, request, id=None):
+        if id is not None:
+            try:
+                author = Author.objects.get(pk=id)
+                serializer = AuthorSerializer(author)
 
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        except:
-            authors = Author.objects.all()
-            serializer = AuthorSerializer(authors, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Author.DoesNotExist:
 
-            return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response({"error": "Author not found"}, status=status.HTTP_404_NOT_FOUND)
+        authors = Author.objects.all()
+        serializer = AuthorSerializer(authors, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
     def post(self, request):
