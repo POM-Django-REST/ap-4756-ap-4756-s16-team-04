@@ -7,19 +7,19 @@ from .serializers import BookSerializer
 
 
 class BookListApiView(APIView):
-    def get(self, request):
-        try:
-            id = request.query_params['id']
-            book = Book.objects.get(pk=id)
-            serializer = BookSerializer(book)
+    def get(self, request, id=None):
+        if id is not None:
+            try:
+                book = Book.objects.get(pk=id)
+                serializer = BookSerializer(book)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Book.DoesNotExist:
 
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        except:
-            books = Book.objects.all()
-            serializer = BookSerializer(books, many=True)
-
-            return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response({"error": "Book not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        books = Book.objects.all()
+        serializer = BookSerializer(books, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
     def post(self, request):
