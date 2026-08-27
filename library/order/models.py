@@ -131,7 +131,7 @@ class Order(models.Model):
         return Order.objects.filter(pk=order_id).first()
 
 
-    def update(self, plated_end_at=None, end_at=None):
+    def update(self, plated_end_at=None, end_at=None, is_active=None):
         try:
 
             if plated_end_at:
@@ -139,6 +139,9 @@ class Order(models.Model):
 
             if end_at:
                 self.end_at = end_at
+
+            if is_active is not None:
+                self.change_order_status()
 
             self.save()
 
